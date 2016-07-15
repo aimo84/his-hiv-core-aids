@@ -14,9 +14,12 @@
 
 package org.openmrs.module.kenyacore.report.builder;
 
+import org.openmrs.Patient;
 import org.openmrs.PatientIdentifierType;
+import org.openmrs.Person;
 import org.openmrs.PersonAttribute;
 import org.openmrs.PersonAttributeType;
+import org.openmrs.PersonName;
 import org.openmrs.api.context.Context;
 import org.openmrs.module.kenyacore.report.CohortReportDescriptor;
 import org.openmrs.module.kenyacore.report.ReportDescriptor;
@@ -96,17 +99,34 @@ public abstract class AbstractCohortReportBuilder extends AbstractReportBuilder 
 	 * @param dsd the data set definition
 	 */
 	protected void addStandardColumns(CohortReportDescriptor report, PatientDataSetDefinition dsd) { 
-		DataConverter nameFormatter = new ObjectFormatter("{familyName}, {givenName}");
-		DataDefinition nameDef = new ConvertedPersonDataDefinition("name", new PreferredNameDataDefinition(), nameFormatter);
-       
-		
+		DataDefinition nameDef =new ConvertedPersonDataDefinition();
+		DataConverter nameFormatterfamilyname = new ObjectFormatter("{familyName},{givenName}");
+		DataConverter nameFormattergivenname = new ObjectFormatter("{givenName}");
+		List<Patient> pat =Context.getPatientService().getAllPatients();
+		for(Patient patid:pat)
+		{
+			Person person =Context.getPersonService().getPerson(patid);
+			PersonName persname =Context.getPersonService().getPersonName(person.getId());
+			
+			if(persname.getFamilyName().equals("(NULL)"))
+			{  
+				nameDef = new ConvertedPersonDataDefinition("name", new PreferredNameDataDefinition(), nameFormattergivenname);
+			}
+			 else
+	          { 
+	             nameDef = new ConvertedPersonDataDefinition("name", new PreferredNameDataDefinition(), nameFormatterfamilyname);
+	          }
+			
+		}
+         
+         
         
 		dsd.addColumn("id", new PatientIdDataDefinition(), "");
 		dsd.addColumn("Name", nameDef, "");
 		dsd.addColumn("Age", new AgeDataDefinition(), "");
 		dsd.addColumn("Sex", new GenderDataDefinition(), "");
-		 PersonAttributeType phoneNumber = Context.getPersonService().getPersonAttributeTypeByUuid("b2c38640-2603-4629-aebd-3b54f33f1e3a");
-		 dsd.addColumn("phone", new PersonAttributeDataDefinition("phone",phoneNumber), "", new PropertyConverter(PersonAttribute.class, "value"));
+	    PersonAttributeType phoneNumber = Context.getPersonService().getPersonAttributeTypeByUuid("b2c38640-2603-4629-aebd-3b54f33f1e3a");
+		dsd.addColumn("phone", new PersonAttributeDataDefinition("phone",phoneNumber), "", new PropertyConverter(PersonAttribute.class, "value"));
     
 		if (report.getDisplayIdentifier() != null) {
 			PatientIdentifierType idType = report.getDisplayIdentifier().getTarget();
