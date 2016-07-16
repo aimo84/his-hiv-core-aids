@@ -100,27 +100,9 @@ public abstract class AbstractCohortReportBuilder extends AbstractReportBuilder 
 	 */
 	protected void addStandardColumns(CohortReportDescriptor report, PatientDataSetDefinition dsd) { 
 		DataDefinition nameDef =new ConvertedPersonDataDefinition();
-		DataConverter nameFormatterfamilyname = new ObjectFormatter("{familyName},{givenName}");
 		DataConverter nameFormattergivenname = new ObjectFormatter("{givenName}");
-		List<Patient> pat =Context.getPatientService().getAllPatients();
-		for(Patient patid:pat)
-		{
-			Person person =Context.getPersonService().getPerson(patid);
-			PersonName persname =Context.getPersonService().getPersonName(person.getId());
-			
-			if(persname.getFamilyName().equals("(NULL)"))
-			{  
-				nameDef = new ConvertedPersonDataDefinition("name", new PreferredNameDataDefinition(), nameFormattergivenname);
-			}
-			 else
-	          { 
-	             nameDef = new ConvertedPersonDataDefinition("name", new PreferredNameDataDefinition(), nameFormatterfamilyname);
-	          }
-			
-		}
-         
-         
-        
+		nameDef = new ConvertedPersonDataDefinition("name", new PreferredNameDataDefinition(), nameFormattergivenname);
+		
 		dsd.addColumn("id", new PatientIdDataDefinition(), "");
 		dsd.addColumn("Name", nameDef, "");
 		dsd.addColumn("Age", new AgeDataDefinition(), "");
